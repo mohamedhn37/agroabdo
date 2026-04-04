@@ -1,0 +1,667 @@
+/* =============================================
+   AGROABDO — THEME GLOBAL
+   Primaire : #7B0D1E | Fond : #F5F0F0
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap');
+
+:root {
+  --primary:        #7B0D1E;
+  --primary-dark:   #6B0F1A;
+  --primary-light:  #9B1C2E;
+  --primary-ultra:  rgba(123, 13, 30, 0.08);
+
+  --bg:             #F5F0F0;
+  --bg-card:        #FFFFFF;
+  --bg-sidebar:     #1C1C1E;
+  --bg-sidebar2:    #2C2C2E;
+
+  --accent-gold:    #E8C547;
+  --accent-green:   #3D9970;
+  --accent-danger:  #C0392B;
+
+  --text-main:      #1C1C1E;
+  --text-soft:      #6B7280;
+  --text-white:     #F5F0F0;
+
+  --border:         #E5E0E0;
+  --border-dark:    #3A3A3C;
+
+  --sidebar-w:      240px;
+  --topbar-h:       64px;
+  --radius:         10px;
+  --shadow:         0 2px 12px rgba(123,13,30,0.08);
+  --shadow-md:      0 4px 24px rgba(123,13,30,0.13);
+
+  --font-display:   'Syne', sans-serif;
+  --font-body:      'DM Sans', sans-serif;
+}
+
+/* ── Dark Mode ─────────────────────────────────────────────────────────────── */
+body.dark-mode {
+  --bg:          #0F0F11;
+  --bg-card:     #1A1A1E;
+  --border:      #2E2E34;
+  --text-main:   #F0EBF0;
+  --text-soft:   #9CA3AF;
+  --shadow:      0 2px 12px rgba(0,0,0,0.4);
+  --shadow-md:   0 4px 24px rgba(0,0,0,0.5);
+  --primary-ultra: rgba(123,13,30,0.15);
+}
+
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Transition douce sur tous les éléments clés */
+.card-agro, .kpi-card, .stat-box, .topbar, .table-agro thead th,
+.modal-agro, .form-control-agro, .search-wrap, .btn-outline-agro {
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 0;
+}
+
+.page-body {
+  padding: 24px;
+  flex: 1;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 1px solid var(--border-dark);
+}
+
+.sidebar.collapsed {
+  width: 0;
+  border-right: none;
+}
+
+.sidebar-brand {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 42px; height: 42px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(123,13,30,0.4);
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-white);
+  display: block;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  font-size: 10px;
+  color: var(--primary-light);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+
+.nav-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  color: #9CA3AF;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.nav-link-item:hover {
+  color: var(--text-white);
+  background: rgba(123,13,30,0.1);
+  border-left-color: rgba(123,13,30,0.5);
+  text-decoration: none;
+}
+
+.nav-link-item.active {
+  color: var(--text-white);
+  background: rgba(123,13,30,0.2);
+  border-left-color: var(--primary);
+}
+
+.nav-link-item i { font-size: 17px; width: 20px; text-align: center; }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border-dark);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 34px; height: 34px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.user-name  { font-size: 13px; font-weight: 600; color: var(--text-white); display: block; }
+.user-role  { font-size: 11px; color: #6B7280; }
+
+/* Overlay mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 199;
+}
+.sidebar-overlay.show { display: block; }
+
+/* ── Topbar ────────────────────────────────────────────────────────────────── */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.topbar-date { font-size: 12px; color: var(--text-soft); }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.menu-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.menu-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  transition: border-color 0.2s;
+}
+.search-wrap:focus-within { border-color: var(--primary); }
+.search-wrap input {
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-main);
+  width: 180px;
+}
+.search-wrap i { color: var(--text-soft); font-size: 14px; }
+
+/* ── KPI Cards ─────────────────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-primary::before   { background: var(--primary); }
+.kpi-gold::before      { background: var(--accent-gold); }
+.kpi-green::before     { background: var(--accent-green); }
+.kpi-danger::before    { background: var(--accent-danger); }
+
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-soft);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-top: 6px;
+  line-height: 1.1;
+}
+
+.kpi-trend {
+  font-size: 12px;
+  font-weight: 600;
+}
+.trend-up   { color: var(--accent-green); }
+.trend-down { color: var(--accent-danger); }
+
+/* ── Cards génériques ──────────────────────────────────────────────────────── */
+.card-agro {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-header-agro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title-agro {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-soft);
+  text-transform: uppercase;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+.table-agro {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table-agro thead th {
+  background: var(--bg);
+  color: var(--text-soft);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-agro tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.table-agro tbody tr:hover td { background: var(--primary-ultra); }
+.table-agro tbody tr:last-child td { border-bottom: none; }
+
+/* ── Badges ────────────────────────────────────────────────────────────────── */
+.badge-retard {
+  background: rgba(192,57,43,0.12);
+  color: var(--accent-danger);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+}
+.badge-ok {
+  background: rgba(61,153,112,0.12);
+  color: var(--accent-green);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+}
+.badge-zone {
+  background: var(--primary-ultra);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 5px;
+}
+.badge-encours {
+  background: rgba(232,197,71,0.15);
+  color: #92710A;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+}
+
+/* ── Amounts ───────────────────────────────────────────────────────────────── */
+.amount-pos  { color: var(--accent-green);  font-weight: 600; }
+.amount-neg  { color: var(--accent-danger); font-weight: 600; }
+.amount-warn { color: #92710A;              font-weight: 600; }
+
+/* ── Stat Box ──────────────────────────────────────────────────────────────── */
+.stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat-val   { font-family: var(--font-display); font-size: 22px; font-weight: 800; display: block; }
+.stat-label { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+
+/* ── Boutons ───────────────────────────────────────────────────────────────── */
+.btn-primary-agro {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary-agro:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-primary-agro:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btn-outline-agro {
+  background: none;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-outline-agro:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+.btn-icon:hover         { border-color: var(--primary); color: var(--primary); }
+.btn-icon.btn-danger:hover { border-color: var(--accent-danger); color: var(--accent-danger); }
+
+/* ── Modal ─────────────────────────────────────────────────────────────────── */
+.modal-overlay-agro {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-agro {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-agro.modal-lg { max-width: 640px; }
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-title-agro {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-footer-agro {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Formulaires ───────────────────────────────────────────────────────────── */
+.form-label-agro {
+  display: block;
+  font-size: 11px;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.form-control-agro {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control-agro:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(123,13,30,0.1);
+}
+
+/* ── Spinner ───────────────────────────────────────────────────────────────── */
+.spinner-agro {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-box {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-soft);
+}
+
+/* ── Toast ─────────────────────────────────────────────────────────────────── */
+.toast-agro {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--bg-card);
+  border-left: 4px solid var(--accent-green);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 13.5px;
+  color: var(--text-main);
+  z-index: 9999;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(120%);
+  transition: transform 0.4s ease;
+  max-width: 320px;
+}
+.toast-agro.show    { transform: translateX(0); }
+.toast-agro.error   { border-left-color: var(--accent-danger); }
+
+/* ── Tabs ──────────────────────────────────────────────────────────────────── */
+.tabs-agro {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 18px;
+}
+.tab-btn-agro {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.tab-btn-agro:hover   { color: var(--primary); }
+.tab-btn-agro.active  { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ── Page header ───────────────────────────────────────────────────────────── */
+.page-header-agro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.page-title-agro {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .main-content { margin-left: 0 !important; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .page-body { padding: 14px; }
+}

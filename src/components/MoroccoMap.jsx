@@ -18,33 +18,71 @@ export const REGIONS = [
 ]
 
 // Correspondance noms GeoJSON → noms app
+// Basé sur les vrais noms du fichier maroc.geojson
 function matchRegion(raw = '') {
   const n = raw.toLowerCase().trim()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   const MAP = {
-    'tanger-tetouan-al hoceima':   'Tanger-Tétouan-Al Hoceïma',
-    'tanger-tetouan-al hoceima':   'Tanger-Tétouan-Al Hoceïma',
-    'tanger tetouan al hoceima':   'Tanger-Tétouan-Al Hoceïma',
-    'tangier-tetouan-al hoceima':  'Tanger-Tétouan-Al Hoceïma',
-    "l'oriental":                  "L'Oriental",
-    'oriental':                    "L'Oriental",
-    'l oriental':                  "L'Oriental",
-    'fes-meknes':                  'Fès-Meknès',
-    'fes meknes':                  'Fès-Meknès',
-    'rabat-sale-kenitra':          'Rabat-Salé-Kénitra',
-    'rabat sale kenitra':          'Rabat-Salé-Kénitra',
-    'beni mellal-khenifra':        'Béni Mellal-Khénifra',
-    'beni mellal khenifra':        'Béni Mellal-Khénifra',
-    'casablanca-settat':           'Casablanca-Settat',
-    'marrakech-safi':              'Marrakech-Safi',
-    'draa-tafilalet':              'Drâa-Tafilalet',
-    'draa tafilalet':              'Drâa-Tafilalet',
-    'souss-massa':                 'Souss-Massa',
-    'guelmim-oued noun':           'Guelmim-Oued Noun',
-    'laayoune-sakia el hamra':     'Laâyoune-Sakia El Hamra',
-    'laayoune sakia el hamra':     'Laâyoune-Sakia El Hamra',
-    'dakhla-oued ed-dahab':        'Dakhla-Oued Ed-Dahab',
-    'dakhla oued ed dahab':        'Dakhla-Oued Ed-Dahab',
+    // Tanger
+    'tanger-tetouan-al hoceima':    'Tanger-Tétouan-Al Hoceïma',
+    'tanger-tetouan-hoceima':       'Tanger-Tétouan-Al Hoceïma',
+    'tanger tetouan al hoceima':    'Tanger-Tétouan-Al Hoceïma',
+    'tanger tetouan hoceima':       'Tanger-Tétouan-Al Hoceïma',
+    'tangier-tetouan-al hoceima':   'Tanger-Tétouan-Al Hoceïma',
+
+    // Oriental
+    "l'oriental":                   "L'Oriental",
+    'oriental':                     "L'Oriental",
+    'l oriental':                   "L'Oriental",
+
+    // Fès-Meknès
+    'fes-meknes':                   'Fès-Meknès',
+    'fes meknes':                   'Fès-Meknès',
+
+    // Rabat
+    'rabat-sale-kenitra':           'Rabat-Salé-Kénitra',
+    'rabat sale kenitra':           'Rabat-Salé-Kénitra',
+
+    // Béni Mellal
+    'beni mellal-khenifra':         'Béni Mellal-Khénifra',
+    'beni mellal khenifra':         'Béni Mellal-Khénifra',
+
+    // Casablanca
+    'casablanca-settat':            'Casablanca-Settat',
+    'casablanca settat':            'Casablanca-Settat',
+
+    // Marrakech
+    'marrakech-safi':               'Marrakech-Safi',
+    'marrakech safi':               'Marrakech-Safi',
+
+    // Drâa — IMPORTANT : le GeoJSON utilise "Daraa-Tafilelt"
+    'draa-tafilalet':               'Drâa-Tafilalet',
+    'draa tafilalet':               'Drâa-Tafilalet',
+    'daraa-tafilelt':               'Drâa-Tafilalet',
+    'daraa tafilelt':               'Drâa-Tafilalet',
+    'daraa-tafilalet':              'Drâa-Tafilalet',
+
+    // Souss — IMPORTANT : le GeoJSON utilise "Souss Massa" (sans tiret)
+    'souss-massa':                  'Souss-Massa',
+    'souss massa':                  'Souss-Massa',
+
+    // Guelmim
+    'guelmim-oued noun':            'Guelmim-Oued Noun',
+    'guelmim oued noun':            'Guelmim-Oued Noun',
+
+    // Laâyoune — IMPORTANT : le GeoJSON utilise "Laayoune-Saguia Hamra"
+    'laayoune-sakia el hamra':      'Laâyoune-Sakia El Hamra',
+    'laayoune sakia el hamra':      'Laâyoune-Sakia El Hamra',
+    'laayoune-saguia hamra':        'Laâyoune-Sakia El Hamra',
+    'laayoune saguia hamra':        'Laâyoune-Sakia El Hamra',
+    'laayoune-es-semara':           'Laâyoune-Sakia El Hamra',
+
+    // Dakhla — IMPORTANT : le GeoJSON utilise "Dakhla-Oued Eddahab"
+    'dakhla-oued ed-dahab':         'Dakhla-Oued Ed-Dahab',
+    'dakhla oued ed dahab':         'Dakhla-Oued Ed-Dahab',
+    'dakhla-oued eddahab':          'Dakhla-Oued Ed-Dahab',
+    'dakhla oued eddahab':          'Dakhla-Oued Ed-Dahab',
+    'oued ed-dahab-lagouira':       'Dakhla-Oued Ed-Dahab',
   }
   return MAP[n] || null
 }
@@ -54,7 +92,6 @@ const MAD = n => 'MAD ' + Math.round(n).toLocaleString('fr-MA')
 export default function MoroccoMap({ clients, commandes, paiements }) {
   const svgRef = useRef(null)
   const [geoData, setGeoData]     = useState(null)
-  const [geoKeys, setGeoKeys]     = useState([]) // pour debug
   const [tooltip, setTooltip]     = useState(null)
   const [pos, setPos]             = useState({ x: 0, y: 0 })
   const [loading, setLoading]     = useState(true)
@@ -63,25 +100,58 @@ export default function MoroccoMap({ clients, commandes, paiements }) {
   useEffect(() => {
     fetch('/maroc.geojson')
       .then(r => r.json())
-      .then(data => {
-        // Détecter les clés de propriétés disponibles pour le matching
-        if (data.features?.length > 0) {
-          const keys = Object.keys(data.features[0].properties || {})
-          setGeoKeys(keys)
-          console.log('GeoJSON properties:', keys)
-          console.log('Sample:', data.features[0].properties)
-        }
-        setGeoData(data)
-        setLoading(false)
-      })
+      .then(data => { setGeoData(data); setLoading(false) })
       .catch(e => { console.error('GeoJSON load error:', e); setLoading(false) })
   }, [])
+
+  // Normalise la zone d'un client vers une des 12 régions officielles
+  function normalizeZone(zone = '') {
+    const z = zone.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const ZONE_MAP = {
+      // Zones officielles (déjà correctes)
+      'tanger-tetouan-al hoceima':  'Tanger-Tétouan-Al Hoceïma',
+      "l'oriental":                 "L'Oriental",
+      'oriental':                   "L'Oriental",
+      'fes-meknes':                 'Fès-Meknès',
+      'rabat-sale-kenitra':         'Rabat-Salé-Kénitra',
+      'beni mellal-khenifra':       'Béni Mellal-Khénifra',
+      'casablanca-settat':          'Casablanca-Settat',
+      'marrakech-safi':             'Marrakech-Safi',
+      'draa-tafilalet':             'Drâa-Tafilalet',
+      'souss-massa':                'Souss-Massa',
+      'guelmim-oued noun':          'Guelmim-Oued Noun',
+      'laayoune-sakia el hamra':    'Laâyoune-Sakia El Hamra',
+      'dakhla-oued ed-dahab':       'Dakhla-Oued Ed-Dahab',
+      // Anciens noms → nouvelles régions
+      'gharb-chrarda':              'Rabat-Salé-Kénitra',
+      'gharb chrarda':              'Rabat-Salé-Kénitra',
+      'gharb':                      'Rabat-Salé-Kénitra',
+      'tadla-azilal':               'Béni Mellal-Khénifra',
+      'tadla azilal':               'Béni Mellal-Khénifra',
+      'marrakech':                  'Marrakech-Safi',
+      'doukkala-abda':              'Casablanca-Settat',
+      'doukkala abda':              'Casablanca-Settat',
+      'meknes-tafilalet':           'Fès-Meknès',
+      'meknes tafilalet':           'Fès-Meknès',
+      'chaouia-ouardigha':          'Casablanca-Settat',
+      'souss':                      'Souss-Massa',
+      'agadir':                     'Souss-Massa',
+      'laayoune':                   'Laâyoune-Sakia El Hamra',
+      'laayoune-saguia hamra':      'Laâyoune-Sakia El Hamra',
+      'dakhla':                     'Dakhla-Oued Ed-Dahab',
+      'tanger':                     'Tanger-Tétouan-Al Hoceïma',
+      'kenitra':                    'Rabat-Salé-Kénitra',
+      'rabat':                      'Rabat-Salé-Kénitra',
+    }
+    return ZONE_MAP[z] || zone // retourne la zone originale si pas trouvée
+  }
 
   // Stats par région
   const regionStats = useMemo(() => {
     const stats = {}
     REGIONS.forEach(r => {
-      const rc    = clients.filter(c => c.zone === r)
+      // Normalise la zone de chaque client avant comparaison
+      const rc    = clients.filter(c => normalizeZone(c.zone) === r)
       const rCmds = commandes.filter(c => rc.some(cl => cl.id === c.clientId))
       const tv    = rCmds.reduce((s, c) => s + getTotal(c), 0)
       const tp    = paiements.filter(p => rc.some(cl => cl.id === p.clientId)).reduce((s, p) => s + p.montant, 0)

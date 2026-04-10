@@ -16,6 +16,7 @@ const allNavItems = [
   { to:'/commandes',    icon:'bi-receipt',           label:'Bons de Commande',      roles:['admin','technicien','analyste'] },
   { to:'/stock',        icon:'bi-archive-fill',      label:'Stock & Semaison',      roles:['admin','technicien','analyste'] },
   { to:'/recouvrement', icon:'bi-cash-coin',         label:'Recouvrement (Crédit)', roles:['admin','analyste'] },
+  { to:'/analyses',     icon:'bi-graph-up-arrow',    label:'Analyses & Rapports',   roles:['admin','analyste'] },
   { to:'/users',        icon:'bi-person-gear',       label:'Utilisateurs',          roles:['admin'] },
 ]
 

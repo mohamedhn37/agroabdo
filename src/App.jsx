@@ -11,6 +11,7 @@ import Produits from './pages/Produits'
 import Commandes from './pages/Commandes'
 import Stock from './pages/Stock'
 import Recouvrement from './pages/Recouvrement'
+import Analyses from './pages/Analyses'
 import Users from './pages/Users'
 
 // Layout protégé — accessible seulement si connecté
@@ -55,6 +56,9 @@ function ProtectedLayout({ showToast }) {
             {/* Recouvrement — admin + analyste seulement */}
             {(role==='admin' || role==='analyste') && (
               <Route path="/recouvrement" element={<Recouvrement showToast={showToast} search={search} />} />
+            )}
+            {(role==='admin' || role==='analyste') && (
+              <Route path="/analyses" element={<Analyses showToast={showToast} />} />
             )}
             {/* Users — admin seulement */}
             {role==='admin' && (

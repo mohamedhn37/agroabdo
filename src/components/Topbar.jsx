@@ -10,6 +10,7 @@ const pageTitles = {
   '/commandes':    'Bons de Commande',
   '/stock':        'Stock & Semaison',
   '/recouvrement': 'Recouvrement (Crédit)',
+  '/analyses':     'Analyses & Rapports',
   '/users':        'Gestion Utilisateurs',
 }
 

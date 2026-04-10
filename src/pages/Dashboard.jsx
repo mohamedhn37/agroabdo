@@ -3,13 +3,13 @@ import { Line, Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js'
 import { useNavigate } from 'react-router-dom'
 import SortableTable from '../components/SortableTable'
-import MoroccoMap from '../components/MoroccoMap'
+import ZonageVille from '../components/ZonageVille'
 import { getAll, COLS, MAD, fmtDate, getTotal, getVentesParMois, getVentesParCategorie, getStockAlertes, getTopDebiteurs } from '../firebase'
+import { getCatConfig } from '../config/categories'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler)
 
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
-const CAT_COLORS = ['#7B0D1E','#E8C547','#3D9970','#C0392B']
 
 export default function Dashboard({ showToast, search }) {
   const navigate = useNavigate()
@@ -62,6 +62,7 @@ export default function Dashboard({ showToast, search }) {
   const ventesParMois = getVentesParMois(commandes)
   const catLabels     = Object.keys(cats)
   const catVals       = Object.values(cats)
+  const catColors     = catLabels.map(l => getCatConfig(l).color)
 
   const idxMap = { all:[0,1,2,3,4,5,6,7,8,9,10,11], q1:[0,1,2], q2:[3,4,5], q3:[6,7,8], q4:[9,10,11] }
   const idxs   = idxMap[filtreMois]
@@ -73,11 +74,17 @@ export default function Dashboard({ showToast, search }) {
       { label:'Encaissements', data:idxs.map(i=>ventesParMois.encaissements[i]), borderColor:'#3D9970', backgroundColor:'rgba(61,153,112,0.06)', tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#3D9970' },
     ],
   }
+
   const lineOptions = {
-    responsive: true, interaction: { mode:'index', intersect:false },
+    responsive: true,
+    interaction: { mode:'index', intersect:false },
     plugins: {
       legend: { labels: { color:'#6B7280', font:{ family:'DM Sans', size:12 } } },
-      tooltip: { backgroundColor:'var(--bg-card)', borderColor:'var(--border)', borderWidth:1, titleColor:'var(--text-main)', bodyColor:'var(--text-soft)', callbacks:{ label: c => ` ${c.dataset.label}: ${MAD(c.raw)}` } }
+      tooltip: {
+        backgroundColor:'var(--bg-card)', borderColor:'var(--border)', borderWidth:1,
+        titleColor:'var(--text-main)', bodyColor:'var(--text-soft)',
+        callbacks: { label: c => ` ${c.dataset.label}: ${MAD(c.raw)}` }
+      }
     },
     scales: {
       x: { ticks:{ color:'#6B7280', font:{ family:'DM Sans' } }, grid:{ color:'var(--border)' } },
@@ -85,9 +92,18 @@ export default function Dashboard({ showToast, search }) {
     }
   }
 
-  const donutCatData = { labels:catLabels, datasets:[{ data:catVals, backgroundColor:CAT_COLORS, borderWidth:0, hoverOffset:4 }] }
-  const donutRecData = { labels:['Recouvré','En Attente'], datasets:[{ data:[totalPaye, totalCredit], backgroundColor:['#3D9970','#C0392B'], borderWidth:0 }] }
-  const donutOpts    = { responsive:false, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: c => ` ${c.label}: ${MAD(c.raw)}` } } } }
+  const donutCatData = {
+    labels: catLabels,
+    datasets: [{ data:catVals, backgroundColor:catColors, borderWidth:0, hoverOffset:4 }]
+  }
+  const donutRecData = {
+    labels: ['Recouvré','En Attente'],
+    datasets: [{ data:[totalPaye, totalCredit], backgroundColor:['#3D9970','#C0392B'], borderWidth:0 }]
+  }
+  const donutOpts = {
+    responsive: false,
+    plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: c => ` ${c.label}: ${MAD(c.raw)}` } } }
+  }
 
   const debiteursColumns = [
     { key:'nom',             label:'Client',           render: r => <strong>{r.nom}</strong> },
@@ -103,29 +119,35 @@ export default function Dashboard({ showToast, search }) {
       <div className="kpi-grid">
         <div className="kpi-card kpi-primary">
           <div className="kpi-label">Ventes Globales</div>
-          <div className="kpi-trend trend-up"><i className="bi bi-arrow-up-right"></i> +8.5% ce mois</div>
+          <div className="kpi-trend trend-up"><i className="bi bi-arrow-up-right"></i> CA Total</div>
           <div className="kpi-value">{MAD(totalVentes)}</div>
         </div>
+
         <div className="kpi-card kpi-danger">
           <div className="kpi-label">Crédit en Attente</div>
           <div className="kpi-trend trend-down"><i className="bi bi-clock"></i> À recouvrer</div>
           <div className="kpi-value">{MAD(totalCredit)}</div>
-          <button className="btn-primary-agro mt-2" style={{fontSize:12,padding:'5px 12px'}} onClick={() => navigate('/recouvrement')}>Relancer</button>
+          <button className="btn-primary-agro mt-2" style={{fontSize:12,padding:'5px 12px'}}
+            onClick={() => navigate('/recouvrement')}>
+            Relancer
+          </button>
         </div>
+
         <div className="kpi-card kpi-gold">
           <div className="kpi-label">Ventes par Catégorie</div>
           <div style={{display:'flex',gap:14,alignItems:'center',marginTop:8}}>
             <Doughnut data={donutCatData} options={donutOpts} width={90} height={90} />
             <div style={{display:'flex',flexDirection:'column',gap:4}}>
               {catLabels.map((l,i) => (
-                <span key={l} style={{fontSize:11.5,color:'var(--text-soft)',display:'flex',alignItems:'center',gap:5}}>
-                  <span style={{width:8,height:8,borderRadius:2,background:CAT_COLORS[i],display:'inline-block'}}></span>
+                <span key={l} style={{fontSize:11,color:'var(--text-soft)',display:'flex',alignItems:'center',gap:5}}>
+                  <span style={{width:8,height:8,borderRadius:2,background:catColors[i],display:'inline-block'}}></span>
                   {l}: {totalVentes ? Math.round(catVals[i]/totalVentes*100) : 0}%
                 </span>
               ))}
             </div>
           </div>
         </div>
+
         <div className="kpi-card kpi-green">
           <div className="kpi-label">Stock & Alertes</div>
           <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:8}}>
@@ -139,7 +161,8 @@ export default function Dashboard({ showToast, search }) {
               ))
             }
             {alertes.length > 0 && (
-              <button className="btn-outline-agro" style={{fontSize:11,padding:'4px 10px',marginTop:4}} onClick={() => navigate('/stock')}>
+              <button className="btn-outline-agro" style={{fontSize:11,padding:'4px 10px',marginTop:4}}
+                onClick={() => navigate('/stock')}>
                 Voir Stock <i className="bi bi-arrow-right"></i>
               </button>
             )}
@@ -147,18 +170,18 @@ export default function Dashboard({ showToast, search }) {
         </div>
       </div>
 
-      {/* ── CARTE MAROC + DÉBITEURS ──────────────────────────────────────────── */}
+      {/* ── ZONAGE PAR VILLE + DÉBITEURS ─────────────────────────────────────── */}
       <div className="row g-3 mb-3">
 
-        {/* Carte interactive */}
+        {/* Zonage par ville */}
         <div className="col-lg-4">
           <div className="card-agro h-100">
             <div className="card-header-agro">
-              <span className="card-title-agro">Carte des Régions</span>
+              <span className="card-title-agro">Zonage par Ville</span>
               <span style={{fontSize:11,color:'var(--text-soft)'}}>{clients.length} clients</span>
             </div>
-            <div className="p-3">
-              <MoroccoMap
+            <div className="p-3" style={{maxHeight:480, overflowY:'auto'}}>
+              <ZonageVille
                 clients={clients}
                 commandes={commandes}
                 paiements={paiements}
@@ -186,7 +209,7 @@ export default function Dashboard({ showToast, search }) {
             <SortableTable
               columns={debiteursColumns}
               data={filteredDebiteurs}
-              emptyMsg={search ? `Aucun résultat pour "${search}"` : 'Aucun débiteur 🎉'}
+              emptyMsg={search ? `Aucun résultat pour "${search}"` : 'Aucun débiteur'}
             />
           </div>
         </div>
@@ -196,12 +219,13 @@ export default function Dashboard({ showToast, search }) {
       <div className="card-agro">
         <div className="card-header-agro">
           <span className="card-title-agro">Évolution Mensuelle — Ventes & Encaissements</span>
-          <select className="form-control-agro" style={{width:'auto',fontSize:12,padding:'5px 10px'}} value={filtreMois} onChange={e => setFiltreMois(e.target.value)}>
+          <select className="form-control-agro" style={{width:'auto',fontSize:12,padding:'5px 10px'}}
+            value={filtreMois} onChange={e => setFiltreMois(e.target.value)}>
             <option value="all">Toute l'année</option>
-            <option value="q1">T1 (Jan–Mar)</option>
-            <option value="q2">T2 (Avr–Jun)</option>
-            <option value="q3">T3 (Jul–Sep)</option>
-            <option value="q4">T4 (Oct–Déc)</option>
+            <option value="q1">Q1 (Jan–Mar)</option>
+            <option value="q2">Q2 (Avr–Jun)</option>
+            <option value="q3">Q3 (Jul–Sep)</option>
+            <option value="q4">Q4 (Oct–Déc)</option>
           </select>
         </div>
         <div style={{padding:'16px 18px 18px'}}>

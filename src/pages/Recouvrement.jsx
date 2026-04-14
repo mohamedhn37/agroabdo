@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { getAll, addItem, updateItem, deleteItem, getTotal, COLS, MAD, fmtDate } from '../firebase'
+import { getAll, addItemWithNumero, updateItem, deleteItem, getTotal, COLS, MAD, fmtDate } from '../firebase'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -129,8 +129,8 @@ export default function Recouvrement({ showToast }) {
       const data = { clientId:form.clientId, commandeId:form.commandeId||null,
         date:form.date, montant:parseFloat(form.montant), mode:form.mode,
         statut:form.statut, dateEcheance:form.statut==='vnv'?form.dateEcheance:null, ref:form.ref.trim() }
-      const id = await addItem(COLS.paiements, data)
-      setPaiements(ps=>[{id,...data},...ps])
+      const { id, numero } = await addItemWithNumero(COLS.paiements, data)
+      setPaiements(ps=>[{id, numero, ...data},...ps])
       setModal(false)
       showToast('Paiement enregistré ✓')
     } catch(e) { showToast(e.message,'error') }

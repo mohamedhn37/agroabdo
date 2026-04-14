@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAll, addItem, updateItem, COLS, MAD, fmtDate } from '../firebase'
+import { getAll, addItemWithNumero, updateItem, COLS, MAD, fmtDate } from '../firebase'
 
 const CAT_COLORS = { Engrais:'#7B0D1E', Semences:'#3D9970', Phytosanitaires:'#E8C547', Machinerie:'#6B7280' }
 const EMPTY_ARR = { produitId:'', date: new Date().toISOString().split('T')[0], qte:'', prixAchat:'', fournisseur:'' }
@@ -41,8 +41,8 @@ export default function Stock({ showToast }) {
         await updateItem(COLS.produits, prod.id, { stock: newStock })
         setProduits(ps => ps.map(p => p.id === prod.id ? { ...p, stock: newStock } : p))
       }
-      const id = await addItem(COLS.arrivages, data)
-      setArrivages(as => [{ id, ...data }, ...as])
+      const { id, numero } = await addItemWithNumero(COLS.arrivages, data)
+      setArrivages(as => [{ id, numero, ...data }, ...as])
       setModalArr(false)
       showToast('Arrivage enregistré ✓')
     } catch(e) { showToast(e.message, 'error') }

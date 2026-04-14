@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import SortableTable from '../components/SortableTable'
-import { getAll, addItem, updateItem, deleteItem, COLS, MAD } from '../firebase'
+import { getAll, addItemWithNumero, updateItem, deleteItem, COLS, MAD } from '../firebase'
 import { CATS, CAT_CONFIG, getCatConfig } from '../config/categories'
 
 const EMPTY = { nom:'', categorie:'Insecticide', unite:'', prixBase:'', fournisseur:'', stock:'', stockMin:'' }
@@ -76,8 +76,8 @@ export default function Produits({ showToast, search }) {
         setProduits(ps=>ps.map(p=>p.id===editId?{id:editId,...data}:p))
         showToast('Produit mis à jour ✓')
       } else {
-        const id = await addItem(COLS.produits,data)
-        setProduits(ps=>[...ps,{id,...data}])
+        const { id, numero } = await addItemWithNumero(COLS.produits, data)
+        setProduits(ps=>[...ps,{id, numero, ...data}])
         showToast('Produit ajouté ✓')
       }
       setModal(false)

@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app"
 import {
   getFirestore, collection, doc,
-  getDocs, addDoc, updateDoc, deleteDoc, setDoc, getDoc,
+  getDocs, addDoc, updateDoc, deleteDoc, setDoc, getDoc, runTransaction,
 } from "firebase/firestore"
 import {
   getAuth,
@@ -50,6 +50,26 @@ export const addItem    = async (colName, data) => { const r = await addDoc(coll
 export const setItem    = async (colName, id, data) => setDoc(doc(db, colName, id), data)
 export const updateItem = async (colName, id, data) => updateDoc(doc(db, colName, id), data)
 export const deleteItem = async (colName, id) => deleteDoc(doc(db, colName, id))
+
+// ── Numérotation séquentielle ────────────────────────────────────────────────
+// Utilise un document compteur par collection dans "counters/{colName}"
+// Garantit l'incrémentation atomique même si deux utilisateurs créent en même temps
+export const getNextNumero = async (colName) => {
+  const counterRef = doc(db, 'counters', colName)
+  return await runTransaction(db, async (transaction) => {
+    const counterDoc = await transaction.get(counterRef)
+    const next = (counterDoc.exists() ? counterDoc.data().value : 0) + 1
+    transaction.set(counterRef, { value: next })
+    return next
+  })
+}
+
+// Crée un document avec numéro séquentiel automatique
+export const addItemWithNumero = async (colName, data) => {
+  const numero = await getNextNumero(colName)
+  const r = await addDoc(collection(db, colName), { numero, ...data })
+  return { id: r.id, numero }
+}
 
 // ── Auth functions ───────────────────────────────────────────────────────────
 export const loginUser  = (email, password) => signInWithEmailAndPassword(auth, email, password)

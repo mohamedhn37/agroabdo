@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import SortableTable from '../components/SortableTable'
-import { getAll, addItem, updateItem, deleteItem, getTotal, COLS, MAD, fmtDate } from '../firebase'
+import { getAll, addItemWithNumero, updateItem, deleteItem, getTotal, COLS, MAD, fmtDate } from '../firebase'
 import { getCatConfig } from '../config/categories'
 
 const EMPTY_LIGNE = { produitId:'', qte:'', prixUnit:'' }
@@ -115,8 +115,8 @@ export default function Commandes({ showToast, search }) {
         }
       }
       const data={clientId,date,lignes:validLignes.map(l=>({produitId:l.produitId,qte:parseFloat(l.qte),prixUnit:parseFloat(l.prixUnit)||0})),statut:'en_cours',paiementRecu:0}
-      const id=await addItem(COLS.commandes,data)
-      setCommandes(cs=>[{id,...data},...cs])
+      const { id, numero } = await addItemWithNumero(COLS.commandes, data)
+      setCommandes(cs=>[{id, numero, ...data},...cs])
       setModal(false); showToast('Commande créée ✓')
     }catch(e){showToast(e.message,'error')}
     finally{setSaving(false)}

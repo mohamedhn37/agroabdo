@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import SortableTable from '../components/SortableTable'
-import { getAll, addItem, updateItem, deleteItem, getSoldeClient, COLS, MAD } from '../firebase'
+import { getAll, addItemWithNumero, updateItem, deleteItem, getSoldeClient, COLS, MAD } from '../firebase'
 
 const ZONES = [
   'Tanger-Tétouan-Al Hoceïma', "L'Oriental", 'Fès-Meknès',
@@ -92,8 +92,8 @@ export default function Clients({ showToast, search }) {
         setClients(cs=>cs.map(c=>c.id===editId?{id:editId,...form}:c))
         showToast('Client mis à jour ✓')
       } else {
-        const id = await addItem(COLS.clients,form)
-        setClients(cs=>[...cs,{id,...form}])
+        const { id, numero } = await addItemWithNumero(COLS.clients, form)
+        setClients(cs=>[...cs,{id, numero, ...form}])
         showToast('Client ajouté ✓')
       }
       setModal(false)

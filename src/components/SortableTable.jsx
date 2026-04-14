@@ -85,9 +85,9 @@ export default function SortableTable({ columns, data, emptyMsg = 'Aucune donné
               )
               : paginated.map((row, i) => (
                 <tr key={row.id ?? i}>
-                  {/* Numéro séquentiel absolu sur toute la liste */}
+                  {/* Numéro : utilise le champ stocké dans Firestore si dispo, sinon index */}
                   <td style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-soft)', fontWeight: 600 }}>
-                    {startIndex + i + 1}
+                    {row.numero ?? (startIndex + i + 1)}
                   </td>
                   {columns.map(col => (
                     <td key={col.key}>

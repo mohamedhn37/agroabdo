@@ -29,12 +29,13 @@ export const auth = getAuth(app)
 
 // ── Collections ─────────────────────────────────────────────────────────────
 export const COLS = {
-  produits:  "produits",
-  clients:   "clients",
-  commandes: "commandes",
-  paiements: "paiements",
-  arrivages: "arrivages",
-  users:     "users",        // profils utilisateurs (rôle, nom, etc.)
+  produits:   "produits",
+  clients:    "clients",
+  commandes:  "commandes",
+  paiements:  "paiements",
+  arrivages:  "arrivages",
+  users:      "users",
+  categories: "categories",   // catégories produits dynamiques
 }
 
 // ── CRUD Firestore ───────────────────────────────────────────────────────────

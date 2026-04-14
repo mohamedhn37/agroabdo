@@ -23,7 +23,7 @@ export default function Stock({ showToast }) {
       .then(([p, a]) => { setProduits(p); setArrivages(a) })
       .catch(e => showToast(e.message, 'error'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [showToast])
 
   const alertes    = produits.filter(p => p.stock <= p.stockMin)
   const valeur     = produits.reduce((s,p) => s + p.stock * p.prixBase, 0)

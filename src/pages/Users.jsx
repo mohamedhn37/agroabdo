@@ -7,12 +7,12 @@ import SortableTable from '../components/SortableTable'
 
 // ── Instance Firebase secondaire pour créer des comptes SANS déconnecter l'admin
 const secondaryApp = initializeApp({
-  apiKey: "AIzaSyD0BHqoZm8CasxiAdpyPYb1F9JsOx6S3mI",
-  authDomain: "abdoagrodatabase.firebaseapp.com",
-  projectId: "abdoagrodatabase",
-  storageBucket: "abdoagrodatabase.firebasestorage.app",
-  messagingSenderId: "1083766542743",
-  appId: "1:1083766542743:web:b24cdf3bf3a2e292e9b4d2",
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 }, 'secondary')
 const secondaryAuth = getAuth(secondaryApp)
 
@@ -37,7 +37,7 @@ export default function Users({ showToast }) {
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [showToast])
 
   async function loadUsers() {
     setLoading(true)
@@ -52,8 +52,12 @@ export default function Users({ showToast }) {
   async function handleCreate() {
     if (!form.nom || !form.email || !form.password)
       return showToast('Tous les champs sont obligatoires', 'error')
-    if (form.password.length < 6)
-      return showToast('Mot de passe : 6 caractères minimum', 'error')
+    if (form.password.length < 8)
+      return showToast('Mot de passe : 8 caractères minimum', 'error')
+    if (!/[A-Z]/.test(form.password))
+      return showToast('Mot de passe : au moins une majuscule requise', 'error')
+    if (!/[0-9]/.test(form.password))
+      return showToast('Mot de passe : au moins un chiffre requis', 'error')
     setSaving(true)
     try {
       // Utilise l'instance secondaire → ne change PAS la session admin
@@ -110,10 +114,14 @@ export default function Users({ showToast }) {
 
   // ── Supprimer ──────────────────────────────────────────────────────────────
   async function handleDelete(user) {
-    if (!confirm(`Supprimer le compte de "${user.nom}" ?\nCette action est irréversible.`)) return
+    if (!confirm(
+      `Désactiver le compte de "${user.nom}" ?\n\n` +
+      `Le compte sera désactivé et ne pourra plus se connecter.\n` +
+      `Pour supprimer définitivement le compte Firebase Auth, utilisez la console Firebase.`
+    )) return
     await deleteUserProfile(user.id)
-    setUsers(us => us.filter(u => u.id !== user.id))
-    showToast('Compte supprimé')
+    setUsers(us => us.map(u => u.id === user.id ? { ...u, actif: false, deleted: true } : u))
+    showToast(`Compte "${user.nom}" désactivé`)
   }
 
   const columns = [
@@ -223,7 +231,7 @@ export default function Users({ showToast }) {
                 <input className="form-control-agro" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="ahmed@agroabdo.ma" />
               </div>
               <div className="col-12">
-                <label className="form-label-agro">Mot de Passe * (min. 6 caractères)</label>
+                <label className="form-label-agro">Mot de Passe * (min. 8 car., 1 majuscule, 1 chiffre)</label>
                 <div style={{ position:'relative' }}>
                   <input className="form-control-agro" type={showPwd?'text':'password'} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder="••••••••" style={{ paddingRight:40 }} />
                   <button type="button" onClick={()=>setShowPwd(s=>!s)} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--text-soft)', fontSize:15 }}>

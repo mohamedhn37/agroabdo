@@ -14,13 +14,13 @@ import {
 } from "firebase/auth"
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD0BHqoZm8CasxiAdpyPYb1F9JsOx6S3mI",
-  authDomain: "abdoagrodatabase.firebaseapp.com",
-  projectId: "abdoagrodatabase",
-  storageBucket: "abdoagrodatabase.firebasestorage.app",
-  messagingSenderId: "1083766542743",
-  appId: "1:1083766542743:web:b24cdf3bf3a2e292e9b4d2",
-  measurementId: "G-7QMC2HVN6N",
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId:     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
 const app = initializeApp(firebaseConfig)
@@ -70,8 +70,11 @@ export const createUser = async ({ email, password, nom, role }) => {
   return cred.user
 }
 
-// Supprimer profil Firestore (l'auth user se gère côté Admin SDK en prod)
-export const deleteUserProfile = (uid) => deleteItem(COLS.users, uid)
+// Disable user profile — marks as deleted so they can no longer log in.
+// Note: the Firebase Auth account itself can only be deleted via the
+// Firebase Admin SDK (server-side) or the Firebase Console.
+export const deleteUserProfile = (uid) =>
+  updateItem(COLS.users, uid, { actif: false, deleted: true, deletedAt: new Date().toISOString() })
 
 // ── Calculs métier ───────────────────────────────────────────────────────────
 export const getTotal = (commande) =>

@@ -29,7 +29,7 @@ export default function Clients({ showToast, search }) {
       .then(([c,cmd,p]) => { setClients(c); setCommandes(cmd); setPaiements(p) })
       .catch(e => showToast(e.message,'error'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [showToast])
 
   const zones = [...new Set(clients.map(c=>c.zone))].sort()
 

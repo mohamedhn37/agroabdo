@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthChange, getOne, COLS } from '../firebase'
+import { onAuthChange, getOne, logoutUser, COLS } from '../firebase'
 
 const AuthContext = createContext(null)
 
@@ -11,13 +11,25 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
-        setUser(firebaseUser)
-        // Charger le profil Firestore
         try {
           const prof = await getOne(COLS.users, firebaseUser.uid)
+
+          // Security: if profile not found or account deactivated → log out immediately
+          if (!prof || prof.actif === false) {
+            await logoutUser()
+            setUser(null)
+            setProfile(null)
+            setLoading(false)
+            return
+          }
+
+          setUser(firebaseUser)
           setProfile(prof)
         } catch {
-          setProfile({ role: 'admin', nom: 'Admin', email: firebaseUser.email })
+          // Firestore error — do NOT grant any role, log user out for safety
+          await logoutUser()
+          setUser(null)
+          setProfile(null)
         }
       } else {
         setUser(null)

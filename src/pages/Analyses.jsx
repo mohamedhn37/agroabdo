@@ -47,7 +47,7 @@ export default function Analyses({ showToast }) {
       .then(([cl, cmd, pa, pr]) => { setClients(cl); setCommandes(cmd); setPaiements(pa); setProduits(pr) })
       .catch(e => showToast(e.message, 'error'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [showToast])
 
   // ── Commandes filtrées ────────────────────────────────────────────────────
   const commandesFiltrees = useMemo(() =>

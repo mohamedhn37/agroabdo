@@ -54,7 +54,7 @@ export default function Recouvrement({ showToast }) {
       .then(([cl,cmd,pa]) => { setClients(cl); setCommandes(cmd); setPaiements(pa) })
       .catch(e => showToast(e.message,'error'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [showToast])
 
   // ── Filtre période ─────────────────────────────────────────────────────────
   const paiementsFiltres = useMemo(() => {
@@ -100,7 +100,7 @@ export default function Recouvrement({ showToast }) {
     const f = { clientId, commandeId:'', date:new Date().toISOString().split('T')[0],
       montant:'', mode:'Espèces', statut:'encaisse', dateEcheance:'', ref:'' }
     if (clientId) {
-      const {nonPaye} = getStatutsMontants(clientId, commandes, paiements)
+      const {nonPaye} = getStatutsMontants(clientId, commandes, paiementsFiltres)
       f.montant = Math.round(nonPaye)
       setClientCmds(commandes.filter(c=>c.clientId===clientId && (getTotal(c)-(c.paiementRecu||0))>0))
     } else { setClientCmds([]) }
@@ -108,7 +108,7 @@ export default function Recouvrement({ showToast }) {
   }
 
   function handleClientChange(cId) {
-    const {nonPaye} = getStatutsMontants(cId, commandes, paiements)
+    const {nonPaye} = getStatutsMontants(cId, commandes, paiementsFiltres)
     setForm(f=>({...f, clientId:cId, montant:Math.round(nonPaye), commandeId:''}))
     setClientCmds(commandes.filter(c=>c.clientId===cId && (getTotal(c)-(c.paiementRecu||0))>0))
   }
@@ -406,7 +406,7 @@ export default function Recouvrement({ showToast }) {
               </div>
 
               {form.clientId && (() => {
-                const s = getStatutsMontants(form.clientId, commandes, paiements)
+                const s = getStatutsMontants(form.clientId, commandes, paiementsFiltres)
                 return (
                   <div className="col-12">
                     <div style={{background:'var(--bg)',borderRadius:8,padding:'10px 14px',fontSize:12,display:'flex',gap:16}}>

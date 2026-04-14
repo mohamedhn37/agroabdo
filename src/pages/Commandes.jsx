@@ -23,11 +23,11 @@ export default function Commandes({ showToast, search }) {
   const [deleting, setDeleting]   = useState(false)
 
   useEffect(() => {
-    Promise.all([getAll(COLS.commandes),getAll(COLS.clients),getAll(COLS.produits),getAll(COLS.paiements)])
+    Promise.all([getAll(COLS.commandes),getAll(COLS.clients),getAll(COLS.produits)])
       .then(([cmd,cl,pr]) => { setCommandes(cmd); setClients(cl); setProduits(pr) })
       .catch(e=>showToast(e.message,'error'))
       .finally(()=>setLoading(false))
-  }, [])
+  }, [showToast])
 
   const enriched = useMemo(() => commandes.map(c => {
     const cl    = clients.find(x=>x.id===c.clientId)

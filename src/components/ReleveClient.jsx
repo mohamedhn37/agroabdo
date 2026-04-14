@@ -1,9 +1,7 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { getTotal, MAD, fmtDate } from '../firebase'
 
 export default function ReleveClient({ client, commandes, paiements, produits, periode, onClose }) {
-  const printRef = useRef(null)
-
   // ── Construire les lignes du relevé ───────────────────────────────────────
   const lignes = useMemo(() => {
     const rows = []

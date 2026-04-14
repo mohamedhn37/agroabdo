@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    // Check that the requesting user is authenticated and their profile is active
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Load the user's Firestore profile to get their role
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getRole() {
+      return getUserProfile().role;
+    }
+
+    function isActive() {
+      let prof = getUserProfile();
+      return prof.actif == true && prof.get('deleted', false) == false;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && isActive() && getRole() == 'admin';
+    }
+
+    function isTechnicien() {
+      return isAuthenticated() && isActive() && getRole() == 'technicien';
+    }
+
+    function isAnalyste() {
+      return isAuthenticated() && isActive() && getRole() == 'analyste';
+    }
+
+    function isAdminOrAnalyste() {
+      return isAuthenticated() && isActive() && (getRole() == 'admin' || getRole() == 'analyste');
+    }
+
+    function canWrite() {
+      return isAuthenticated() && isActive() && (getRole() == 'admin' || getRole() == 'technicien');
+    }
+
+    // ── Users collection — admin only ─────────────────────────────────────────
+    match /users/{userId} {
+      // Any authenticated active user can read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can read all user profiles
+      allow read: if isAdmin();
+      // Only admins can create/update user profiles
+      allow create, update: if isAdmin();
+      // No one can hard-delete user documents from client (use Admin SDK)
+      allow delete: if false;
+    }
+
+    // ── Produits — all authenticated active users can read ────────────────────
+    match /produits/{docId} {
+      allow read: if isAuthenticated() && isActive();
+      allow create, update, delete: if canWrite();
+    }
+
+    // ── Clients — all authenticated active users can read ─────────────────────
+    match /clients/{docId} {
+      allow read: if isAuthenticated() && isActive();
+      allow create, update, delete: if canWrite();
+    }
+
+    // ── Commandes — all authenticated active users can read ───────────────────
+    match /commandes/{docId} {
+      allow read: if isAuthenticated() && isActive();
+      allow create, update, delete: if canWrite();
+    }
+
+    // ── Paiements — admin + analyste can read, admin + technicien can write ───
+    match /paiements/{docId} {
+      allow read: if isAdminOrAnalyste();
+      allow create, update, delete: if canWrite();
+    }
+
+    // ── Arrivages (stock arrivals) ─────────────────────────────────────────────
+    match /arrivages/{docId} {
+      allow read: if isAuthenticated() && isActive();
+      allow create, update, delete: if canWrite();
+    }
+
+    // ── Deny everything else ──────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
@@ -31,7 +31,8 @@ function ProtectedLayout({ showToast }) {
 
   if (!user) return <Navigate to="/login" replace />
 
-  const role = profile?.role || 'admin'
+  // Security: never default to admin — use least-privilege role as fallback
+  const role = profile?.role || 'technicien'
 
   return (
     <div className="app-layout">
@@ -75,10 +76,10 @@ function ProtectedLayout({ showToast }) {
 function AppRouter() {
   const [toast, setToast] = useState({ msg:'', type:'success', show:false })
 
-  const showToast = (msg, type='success') => {
+  const showToast = useCallback((msg, type='success') => {
     setToast({ msg, type, show:true })
     setTimeout(() => setToast(t => ({ ...t, show:false })), 3200)
-  }
+  }, [])
 
   return (
     <>

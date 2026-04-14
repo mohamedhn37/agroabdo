@@ -19,7 +19,7 @@ export default function Produits({ showToast, search }) {
 
   useEffect(() => {
     getAll(COLS.produits).then(setProduits).catch(e=>showToast(e.message,'error')).finally(()=>setLoading(false))
-  }, [])
+  }, [showToast])
 
   const filtered = useMemo(() => produits.filter(p =>
     (!search || p.nom.toLowerCase().includes(search.toLowerCase()) || (p.fournisseur||'').toLowerCase().includes(search.toLowerCase())) &&

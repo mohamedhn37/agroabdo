@@ -29,7 +29,7 @@ export default function Dashboard({ showToast, search }) {
       finally { setLoading(false) }
     }
     load()
-  }, [])
+  }, [showToast])
 
   const debiteurs = useMemo(() => {
     if (!data) return []

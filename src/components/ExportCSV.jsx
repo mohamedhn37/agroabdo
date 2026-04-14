@@ -38,17 +38,20 @@ export default function ExportCSV({ showToast }) {
 
       const date = new Date().toISOString().split('T')[0]
 
+      // Helper: ajoute colonne numero (1,2,3...) en premier
+      const withNumero = rows => rows.map((r, i) => ({ numero: i + 1, ...r }))
+
       // ── Produits ──
       downloadCSV(`produits_${date}.csv`, toCSV(
-        ['id','nom','categorie','unite','prixBase','stock','stockMin','fournisseur'],
-        produits
+        ['numero','nom','categorie','unite','prixBase','stock','stockMin','fournisseur'],
+        withNumero(produits)
       ))
 
       // ── Clients ──
       await new Promise(r => setTimeout(r, 300))
       downloadCSV(`clients_${date}.csv`, toCSV(
-        ['id','nom','zone','ville','adresse','tel','ice'],
-        clients
+        ['numero','nom','zone','ville','adresse','tel','ice'],
+        withNumero(clients)
       ))
 
       // ── Commandes enrichies ──
@@ -56,9 +59,7 @@ export default function ExportCSV({ showToast }) {
       const rows_cmd = commandes.map(c => {
         const client = clients.find(cl => cl.id === c.clientId)
         return {
-          id:          c.id,
           date:        c.date,
-          clientId:    c.clientId,
           clientNom:   client?.nom || '',
           zone:        client?.zone || '',
           total:       getTotal(c),
@@ -69,8 +70,8 @@ export default function ExportCSV({ showToast }) {
         }
       })
       downloadCSV(`commandes_${date}.csv`, toCSV(
-        ['id','date','clientId','clientNom','zone','total','paiementRecu','restant','statut','nbLignes'],
-        rows_cmd
+        ['numero','date','clientNom','zone','total','paiementRecu','restant','statut','nbLignes'],
+        withNumero(rows_cmd)
       ))
 
       // ── Lignes de commande (détail) ──
@@ -81,11 +82,9 @@ export default function ExportCSV({ showToast }) {
         ;(c.lignes || []).forEach(l => {
           const prod = produits.find(p => p.id === l.produitId)
           rows_lignes.push({
-            commandeId:  c.id,
             date:        c.date,
             clientNom:   client?.nom || '',
             zone:        client?.zone || '',
-            produitId:   l.produitId,
             produitNom:  prod?.nom || '',
             categorie:   prod?.categorie || '',
             qte:         l.qte,
@@ -95,30 +94,45 @@ export default function ExportCSV({ showToast }) {
         })
       })
       downloadCSV(`lignes_commandes_${date}.csv`, toCSV(
-        ['commandeId','date','clientNom','zone','produitNom','categorie','qte','prixUnit','total'],
-        rows_lignes
+        ['numero','date','clientNom','zone','produitNom','categorie','qte','prixUnit','total'],
+        withNumero(rows_lignes)
       ))
 
       // ── Paiements ──
       await new Promise(r => setTimeout(r, 300))
       const rows_pay = paiements.map(p => {
         const client = clients.find(cl => cl.id === p.clientId)
-        return { ...p, clientNom: client?.nom || '', zone: client?.zone || '' }
+        return {
+          date:      p.date,
+          clientNom: client?.nom || '',
+          zone:      client?.zone || '',
+          montant:   p.montant,
+          mode:      p.mode,
+          statut:    p.statut,
+          ref:       p.ref || '',
+        }
       })
       downloadCSV(`paiements_${date}.csv`, toCSV(
-        ['id','date','clientId','clientNom','zone','montant','mode','ref','commandeId'],
-        rows_pay
+        ['numero','date','clientNom','zone','montant','mode','statut','ref'],
+        withNumero(rows_pay)
       ))
 
       // ── Arrivages ──
       await new Promise(r => setTimeout(r, 300))
       const rows_arr = arrivages.map(a => {
         const prod = produits.find(p => p.id === a.produitId)
-        return { ...a, produitNom: prod?.nom || '', categorie: prod?.categorie || '' }
+        return {
+          date:       a.date,
+          produitNom: prod?.nom || '',
+          categorie:  prod?.categorie || '',
+          qte:        a.qte,
+          prixAchat:  a.prixAchat,
+          fournisseur: a.fournisseur || '',
+        }
       })
       downloadCSV(`arrivages_${date}.csv`, toCSV(
-        ['id','date','produitId','produitNom','categorie','qte','prixAchat','fournisseur'],
-        rows_arr
+        ['numero','date','produitNom','categorie','qte','prixAchat','fournisseur'],
+        withNumero(rows_arr)
       ))
 
       showToast('6 fichiers CSV exportés ✓ — Prêt pour Power BI !')

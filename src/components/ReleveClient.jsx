@@ -237,7 +237,7 @@ export default function ReleveClient({ client, commandes, paiements, produits, p
         </div>
 
         {/* Tableau relevé */}
-        <div ref={printRef} style={{ overflowX:'auto' }}>
+        <div style={{ overflowX:'auto' }}>
           <table className="table-agro" style={{ fontSize:12 }}>
             <thead>
               <tr>

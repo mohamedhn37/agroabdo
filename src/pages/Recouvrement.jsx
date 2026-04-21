@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { getAll, addItemWithNumero, updateItem, deleteItem, getTotal, COLS, MAD, fmtDate } from '../firebase'
+import SortableTable from '../components/SortableTable'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -306,86 +307,72 @@ export default function Recouvrement({ showToast }) {
         </div>
       </div>
 
-      {/* Historique paiements */}
+      {/* Historique paiements — avec tri par colonne */}
       <div className="card-agro">
         <div className="card-header-agro">
           <span className="card-title-agro">Historique des Paiements</span>
           <span style={{fontSize:11,color:'var(--text-soft)',fontStyle:'italic'}}>
             <i className="bi bi-info-circle me-1"></i>
-            Cliquer sur 🟠 VNV pour le convertir en encaissé
+            Cliquer sur 🟠 VNV pour le convertir en encaissé — cliquer sur les colonnes pour trier
           </span>
         </div>
-        <div className="table-responsive">
-          <table className="table-agro">
-            <thead>
-              <tr><th>Date</th><th>Client</th><th>Montant</th><th>Mode</th><th>Statut</th><th>Échéance VNV</th><th>Référence</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {[...paiementsFiltres]
-                .sort((a,b)=>new Date(b.date)-new Date(a.date))
-                .filter(p=>!selectedClient||p.clientId===selectedClient)
-                .map(p => {
-                  const cl = clients.find(c=>c.id===p.clientId)
-                  const isVNV = p.statut==='vnv'
-                  const isEnc = p.statut==='encaisse'||!p.statut
-                  return (
-                    <tr key={p.id}>
-                      <td>{fmtDate(p.date)}</td>
-                      <td><strong>{cl?cl.nom:'?'}</strong></td>
-                      <td className="amount-pos">{MAD(p.montant)}</td>
-                      <td>
-                        <span style={{background:'var(--primary-ultra)',color:'var(--primary)',fontSize:11.5,fontWeight:600,padding:'2px 9px',borderRadius:5}}>
-                          {p.mode}
-                        </span>
-                      </td>
-                      <td>
-                        {isVNV ? (
-                          <button
-                            title="Cliquer pour convertir en Encaissé"
-                            onClick={()=>convertVNV(p)}
-                            style={{background:'rgba(232,160,32,0.12)',color:'#E8A020',fontSize:11.5,fontWeight:700,
-                              padding:'3px 10px',borderRadius:5,border:'1px dashed #E8A020',cursor:'pointer',
-                              transition:'all 0.2s'}}
-                            onMouseOver={e=>{e.target.style.background='rgba(232,160,32,0.25)'}}
-                            onMouseOut={e=>{e.target.style.background='rgba(232,160,32,0.12)'}}
-                          >
-                            🟠 VNV → cliquer pour encaisser
-                          </button>
-                        ) : (
-                          <span style={{background:'rgba(61,153,112,0.12)',color:'#3D9970',fontSize:11.5,fontWeight:700,padding:'3px 10px',borderRadius:5}}>
-                            🟢 Encaissé
-                          </span>
-                        )}
-                      </td>
-                      <td style={{fontSize:12,color:isVNV?'#E8A020':'var(--text-soft)',fontWeight:isVNV?700:400}}>
-                        {p.dateEcheance ? (
-                          <span>
-                            <i className="bi bi-calendar-event me-1"></i>
-                            {fmtDate(p.dateEcheance)}
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td style={{fontSize:12,color:'var(--text-soft)'}}>{p.ref||'—'}</td>
-                      <td>
-                        <div className="d-flex gap-1">
-                          <button className="btn-icon" title="Modifier" onClick={()=>openEditModal(p)}>
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button className="btn-icon btn-danger" title="Supprimer" onClick={()=>handleDeletePay(p)}>
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              }
-              {paiementsFiltres.length===0 && (
-                <tr><td colSpan={8} style={{textAlign:'center',padding:24,color:'var(--text-soft)'}}>Aucun paiement sur cette période</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <SortableTable
+          pageSize={15}
+          emptyMsg="Aucun paiement sur cette période"
+          data={
+            paiementsFiltres
+              .filter(p => !selectedClient || p.clientId === selectedClient)
+              .map(p => ({
+                ...p,
+                clientNom:     clients.find(c => c.id === p.clientId)?.nom || '?',
+                dateEcheance:  p.dateEcheance || '',
+                statutSort:    p.statut === 'vnv' ? 0 : 1,   // VNV en premier quand on trie par statut
+              }))
+          }
+          columns={[
+            { key:'date',      label:'Date',         render: r => <span style={{whiteSpace:'nowrap',fontSize:12}}>{fmtDate(r.date)}</span> },
+            { key:'clientNom', label:'Client',        render: r => <strong>{r.clientNom}</strong> },
+            { key:'montant',   label:'Montant',       render: r => <span className="amount-pos">{MAD(r.montant)}</span> },
+            { key:'mode',      label:'Mode',          render: r => (
+              <span style={{background:'var(--primary-ultra)',color:'var(--primary)',fontSize:11.5,fontWeight:600,padding:'2px 9px',borderRadius:5}}>
+                {r.mode}
+              </span>
+            )},
+            { key:'statutSort', label:'Statut',       render: r => r.statut === 'vnv' ? (
+              <button
+                title="Cliquer pour convertir en Encaissé"
+                onClick={() => convertVNV(r)}
+                style={{background:'rgba(232,160,32,0.12)',color:'#E8A020',fontSize:11.5,fontWeight:700,
+                  padding:'3px 10px',borderRadius:5,border:'1px dashed #E8A020',cursor:'pointer',transition:'all 0.2s'}}
+                onMouseOver={e=>{e.currentTarget.style.background='rgba(232,160,32,0.25)'}}
+                onMouseOut={e=>{e.currentTarget.style.background='rgba(232,160,32,0.12)'}}
+              >
+                🟠 VNV → encaisser
+              </button>
+            ) : (
+              <span style={{background:'rgba(61,153,112,0.12)',color:'#3D9970',fontSize:11.5,fontWeight:700,padding:'3px 10px',borderRadius:5}}>
+                🟢 Encaissé
+              </span>
+            )},
+            { key:'dateEcheance', label:'Échéance VNV', render: r => r.dateEcheance ? (
+              <span style={{color:'#E8A020',fontWeight:700,fontSize:12,whiteSpace:'nowrap'}}>
+                <i className="bi bi-calendar-event me-1"></i>
+                {fmtDate(r.dateEcheance)}
+              </span>
+            ) : <span style={{color:'var(--text-soft)'}}>—</span> },
+            { key:'ref',  label:'Référence', render: r => <span style={{fontSize:12,color:'var(--text-soft)'}}>{r.ref||'—'}</span> },
+            { key:'actions', label:'', sortable:false, render: r => (
+              <div className="d-flex gap-1">
+                <button className="btn-icon" title="Modifier" onClick={()=>openEditModal(r)}>
+                  <i className="bi bi-pencil"></i>
+                </button>
+                <button className="btn-icon btn-danger" title="Supprimer" onClick={()=>handleDeletePay(r)}>
+                  <i className="bi bi-trash"></i>
+                </button>
+              </div>
+            )},
+          ]}
+        />
       </div>
 
       {/* ── Modal Nouveau Paiement ─────────────────────────────────────────── */}

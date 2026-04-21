@@ -38,7 +38,6 @@ export default function Analyses({ showToast }) {
   const [periode, setPeriode]         = useState('annee')
   const [customDebut, setCustomDebut] = useState('')
   const [customFin, setCustomFin]     = useState('')
-  const [topN, setTopN]               = useState(10)
   const [tab, setTab]                 = useState('ca') // 'ca' | 'encaissement' | 'produits'
   const [clientReleve, setClientReleve] = useState(null) // client pour le relevé
 
@@ -70,8 +69,7 @@ export default function Analyses({ showToast }) {
     })
     .filter(c => c.ca > 0)
     .sort((a, b) => b.ca - a.ca)
-    .slice(0, topN)
-  }, [clients, commandesFiltrees, paiementsFiltres, topN])
+  }, [clients, commandesFiltrees, paiementsFiltres])
 
   const barCAData = {
     labels: caParClient.map(c => c.nom.length > 15 ? c.nom.substring(0,15)+'...' : c.nom),
@@ -414,18 +412,6 @@ export default function Analyses({ showToast }) {
             </>
           )}
 
-          <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
-            <span style={{ fontSize:12, color:'var(--text-soft)' }}>Top :</span>
-            {[5,10,20].map(n => (
-              <button key={n} onClick={() => setTopN(n)}
-                style={{ padding:'4px 12px', borderRadius:5, fontSize:12, fontWeight:600, cursor:'pointer',
-                  border:`1px solid ${topN===n?'var(--primary)':'var(--border)'}`,
-                  background: topN===n?'var(--primary)':'none',
-                  color: topN===n?'white':'var(--text-soft)',
-                  fontFamily:'var(--font-body)',
-                }}>{n}</button>
-            ))}
-          </div>
         </div>
       </div>
 

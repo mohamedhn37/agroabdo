@@ -6,6 +6,7 @@ import {
 } from 'chart.js'
 import { getAll, COLS, MAD, fmtDate, getTotal } from '../firebase'
 import ReleveClient from '../components/ReleveClient'
+import SortableTable from '../components/SortableTable'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -453,58 +454,39 @@ export default function Analyses({ showToast }) {
                 <i className="bi bi-hand-index me-1"></i>Cliquer sur un client pour voir son relevé
               </span>
             </div>
-            <div className="table-responsive">
-              <table className="table-agro">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Client</th>
-                    <th>Zone</th>
-                    <th>Nb Cmds</th>
-                    <th>CA Total</th>
-                    <th>Encaissé</th>
-                    <th>Restant</th>
-                    <th>% du CA</th>
+            <div style={{ padding:'0 4px 4px' }}>
+              <SortableTable
+                columns={[
+                  { key:'nom',     label:'Client',   render: r => <strong>{r.nom}</strong> },
+                  { key:'zone',    label:'Zone',     render: r => <span className="badge-zone">{r.zone}</span> },
+                  { key:'nbCmds', label:'Nb Cmds',  render: r => <span style={{ color:'var(--text-soft)' }}>{r.nbCmds}</span> },
+                  { key:'ca',     label:'CA Total', render: r => <span className="amount-pos">{MAD(r.ca)}</span> },
+                  { key:'paye',   label:'Encaissé', render: r => <span style={{ color:'#3D9970', fontWeight:600 }}>{MAD(r.paye)}</span> },
+                  { key:'restant',label:'Restant',  render: r => <span className={r.restant>0?'amount-neg':'amount-pos'}>{MAD(r.restant)}</span> },
+                  { key:'pct', label:'% du CA', sortable:false, render: r => (
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <div style={{ width:60, height:5, background:'var(--border)', borderRadius:3 }}>
+                        <div style={{ width:`${totalCA>0?Math.round(r.ca/totalCA*100):0}%`, height:'100%', background:'var(--primary)', borderRadius:3 }}></div>
+                      </div>
+                      <span style={{ fontSize:11, color:'var(--text-soft)' }}>{totalCA>0?Math.round(r.ca/totalCA*100):0}%</span>
+                    </div>
+                  )},
+                ]}
+                data={caParClient}
+                emptyMsg="Aucune vente sur cette période"
+                pageSize={15}
+                onRowClick={c => setClientReleve(c)}
+                footer={caParClient.length > 0 && (
+                  <tr style={{ background:'var(--primary-ultra)', fontWeight:700 }}>
+                    <td></td>
+                    <td colSpan={3} style={{ fontWeight:700, color:'var(--primary)' }}>TOTAL</td>
+                    <td className="amount-pos">{MAD(totalCA)}</td>
+                    <td style={{ color:'#3D9970', fontWeight:700 }}>{MAD(totalPaye2)}</td>
+                    <td className="amount-neg">{MAD(totalCA-totalPaye2)}</td>
+                    <td>100%</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {caParClient.map((c, i) => (
-                    <tr key={c.id}
-                      onClick={() => setClientReleve(c)}
-                      style={{ cursor:'pointer' }}
-                      title="Cliquer pour voir le relevé de compte"
-                    >
-                      <td style={{ color:'var(--text-soft)', fontWeight:700 }}>#{i+1}</td>
-                      <td><strong>{c.nom}</strong></td>
-                      <td><span className="badge-zone">{c.zone}</span></td>
-                      <td style={{ color:'var(--text-soft)' }}>{c.nbCmds}</td>
-                      <td className="amount-pos">{MAD(c.ca)}</td>
-                      <td style={{ color:'#3D9970', fontWeight:600 }}>{MAD(c.paye)}</td>
-                      <td className={c.restant>0?'amount-neg':'amount-pos'}>{MAD(c.restant)}</td>
-                      <td>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <div style={{ width:60, height:5, background:'var(--border)', borderRadius:3 }}>
-                            <div style={{ width:`${totalCA>0?Math.round(c.ca/totalCA*100):0}%`, height:'100%', background:'var(--primary)', borderRadius:3 }}></div>
-                          </div>
-                          <span style={{ fontSize:11, color:'var(--text-soft)' }}>
-                            {totalCA>0?Math.round(c.ca/totalCA*100):0}%
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Total */}
-                  {caParClient.length > 0 && (
-                    <tr style={{ background:'var(--primary-ultra)', fontWeight:700 }}>
-                      <td colSpan={4} style={{ fontWeight:700, color:'var(--primary)' }}>TOTAL</td>
-                      <td className="amount-pos">{MAD(totalCA)}</td>
-                      <td style={{ color:'#3D9970', fontWeight:700 }}>{MAD(totalPaye2)}</td>
-                      <td className="amount-neg">{MAD(totalCA-totalPaye2)}</td>
-                      <td>100%</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                )}
+              />
             </div>
           </div>
         </div>

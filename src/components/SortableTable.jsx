@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
  *   emptyMsg?:    string
  *   pageSize?:    number (default 20) — lignes par page
  */
-export default function SortableTable({ columns, data, emptyMsg = 'Aucune donnée', pageSize = 20 }) {
+export default function SortableTable({ columns, data, emptyMsg = 'Aucune donnée', pageSize = 20, onRowClick, footer, rowStyle }) {
   const [sortKey, setSortKey]     = useState(null)
   const [sortDir, setSortDir]     = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -84,7 +84,14 @@ export default function SortableTable({ columns, data, emptyMsg = 'Aucune donné
                 </tr>
               )
               : paginated.map((row, i) => (
-                <tr key={row.id ?? i}>
+                <tr
+                  key={row.id ?? i}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  style={{
+                    ...(onRowClick ? { cursor: 'pointer' } : {}),
+                    ...(rowStyle ? rowStyle(row) : {}),
+                  }}
+                >
                   {/* Numéro : utilise le champ stocké dans Firestore si dispo, sinon index */}
                   <td style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-soft)', fontWeight: 600 }}>
                     {row.numero ?? (startIndex + i + 1)}
@@ -97,6 +104,7 @@ export default function SortableTable({ columns, data, emptyMsg = 'Aucune donné
                 </tr>
               ))
             }
+            {footer}
           </tbody>
         </table>
       </div>

@@ -129,7 +129,8 @@ export default function Analyses({ showToast }) {
         dateEcheance: p.dateEcheance,
         ref: p.ref || ''
       }))
-      return { ...c, totalDu, encaisse, vnv, nonPaye, taux, nbCmds: cCmds.length, vnvDetails }
+      const statutSort = (nonPaye===0 && vnv===0) ? 2 : (vnv>0 && nonPaye===0) ? 1 : 0
+      return { ...c, totalDu, encaisse, vnv, nonPaye, taux, nbCmds: cCmds.length, vnvDetails, statutSort }
     })
     .filter(c => c.totalDu > 0 || c.encaisse > 0)
     .sort((a,b) => b.totalDu - a.totalDu)
@@ -366,8 +367,9 @@ export default function Analyses({ showToast }) {
 
   if (loading) return <div className="loading-box"><div className="spinner-agro"></div><p>Chargement analyses...</p></div>
 
-  const totalCA    = caParClient.reduce((s,c) => s+c.ca, 0)
-  const totalPaye2 = caParClient.reduce((s,c) => s+c.paye, 0)
+  const totalCA         = caParClient.reduce((s,c) => s+c.ca, 0)
+  const totalPaye2      = caParClient.reduce((s,c) => s+c.paye, 0)
+  const totalCAProduits = ventesParProduit.reduce((s,p) => s+p.ca, 0)
 
   return (
     <div>
@@ -506,86 +508,56 @@ export default function Analyses({ showToast }) {
               </button>
             </div>
           </div>
-          <div className="table-responsive">
-            <table className="table-agro">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Zone</th>
-                  <th>Cmds</th>
-                  <th>Total Dû</th>
-                  <th style={{ color:'#3D9970' }}>🟢 Encaissé</th>
-                  <th style={{ color:'#E8A020' }}>🟠 VNV</th>
-                  <th style={{ color:'#C0392B' }}>🔴 Non Payé</th>
-                  <th>Taux</th>
-                  <th>Statut</th>
+          <div style={{ padding:'0 4px 4px' }}>
+            <SortableTable
+              data={situationEncaissement}
+              pageSize={15}
+              emptyMsg="Aucune donnée sur cette période"
+              columns={[
+                { key:'nom',        label:'Client',      render: r => <strong>{r.nom}</strong> },
+                { key:'zone',       label:'Zone',        render: r => <span className="badge-zone">{r.zone}</span> },
+                { key:'nbCmds',     label:'Cmds',        render: r => <span style={{ color:'var(--text-soft)' }}>{r.nbCmds}</span> },
+                { key:'totalDu',    label:'Total Dû',    render: r => <span className="amount-warn">{MAD(r.totalDu)}</span> },
+                { key:'encaisse',   label:'🟢 Encaissé', render: r => <span style={{ color:'#3D9970', fontWeight:600 }}>{MAD(r.encaisse)}</span> },
+                { key:'vnv',        label:'🟠 VNV',      render: r => r.vnv>0
+                  ? <span style={{ background:'rgba(232,160,32,0.12)', color:'#E8A020', fontWeight:700, padding:'2px 8px', borderRadius:5, fontSize:11.5 }}>{MAD(r.vnv)}</span>
+                  : <span style={{ color:'var(--text-soft)' }}>—</span> },
+                { key:'nonPaye',    label:'🔴 Non Payé', render: r => r.nonPaye>0
+                  ? <span className="badge-retard">{MAD(r.nonPaye)}</span>
+                  : <span style={{ color:'var(--text-soft)' }}>—</span> },
+                { key:'taux',       label:'Taux',        render: r => (
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:50, height:5, background:'var(--border)', borderRadius:3 }}>
+                      <div style={{ width:`${r.taux}%`, height:'100%', borderRadius:3,
+                        background: r.taux>=70?'#3D9970':r.taux>=40?'#E8A020':'#C0392B' }}></div>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, color: r.taux>=70?'#3D9970':r.taux>=40?'#E8A020':'#C0392B' }}>{r.taux}%</span>
+                  </div>
+                )},
+                { key:'statutSort', label:'Statut',      render: r => r.nonPaye===0 && r.vnv===0
+                  ? <span className="badge-ok">✓ Soldé</span>
+                  : r.vnv>0 && r.nonPaye===0
+                    ? <span style={{ background:'rgba(232,160,32,0.12)', color:'#E8A020', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:5 }}>VNV</span>
+                    : <span className="badge-retard">En cours</span>
+                },
+              ]}
+              footer={situationEncaissement.length > 0 && (
+                <tr style={{ background:'var(--primary-ultra)', fontWeight:700 }}>
+                  <td></td>
+                  <td colSpan={3} style={{ color:'var(--primary)', fontWeight:700 }}>TOTAL</td>
+                  <td className="amount-warn">{MAD(totaux.totalDu)}</td>
+                  <td style={{ color:'#3D9970', fontWeight:700 }}>{MAD(totaux.encaisse)}</td>
+                  <td style={{ color:'#E8A020', fontWeight:700 }}>{MAD(totaux.vnv)}</td>
+                  <td className="amount-neg">{MAD(totaux.nonPaye)}</td>
+                  <td>
+                    <span style={{ fontWeight:700, color: totaux.totalDu>0 && Math.round(totaux.encaisse/totaux.totalDu*100)>=70?'#3D9970':'#C0392B' }}>
+                      {totaux.totalDu>0?Math.round(totaux.encaisse/totaux.totalDu*100):0}%
+                    </span>
+                  </td>
+                  <td></td>
                 </tr>
-              </thead>
-              <tbody>
-                {situationEncaissement.map(c => (
-                  <tr key={c.id}>
-                    <td><strong>{c.nom}</strong></td>
-                    <td><span className="badge-zone">{c.zone}</span></td>
-                    <td style={{ color:'var(--text-soft)' }}>{c.nbCmds}</td>
-                    <td className="amount-warn">{MAD(c.totalDu)}</td>
-                    <td style={{ color:'#3D9970', fontWeight:600 }}>{MAD(c.encaisse)}</td>
-                    <td>
-                      {c.vnv > 0
-                        ? <span style={{ background:'rgba(232,160,32,0.12)', color:'#E8A020', fontWeight:700, padding:'2px 8px', borderRadius:5, fontSize:11.5 }}>{MAD(c.vnv)}</span>
-                        : <span style={{ color:'var(--text-soft)' }}>—</span>
-                      }
-                    </td>
-                    <td>
-                      {c.nonPaye > 0
-                        ? <span className="badge-retard">{MAD(c.nonPaye)}</span>
-                        : <span style={{ color:'var(--text-soft)' }}>—</span>
-                      }
-                    </td>
-                    <td>
-                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <div style={{ width:50, height:5, background:'var(--border)', borderRadius:3 }}>
-                          <div style={{ width:`${c.taux}%`, height:'100%', borderRadius:3,
-                            background: c.taux>=70?'#3D9970':c.taux>=40?'#E8A020':'#C0392B' }}></div>
-                        </div>
-                        <span style={{ fontSize:11, fontWeight:700,
-                          color: c.taux>=70?'#3D9970':c.taux>=40?'#E8A020':'#C0392B' }}>
-                          {c.taux}%
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      {c.nonPaye === 0 && c.vnv === 0
-                        ? <span className="badge-ok">✓ Soldé</span>
-                        : c.vnv > 0 && c.nonPaye === 0
-                          ? <span style={{ background:'rgba(232,160,32,0.12)', color:'#E8A020', fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:5 }}>VNV</span>
-                          : <span className="badge-retard">En cours</span>
-                      }
-                    </td>
-                  </tr>
-                ))}
-
-                {/* Ligne totaux */}
-                {situationEncaissement.length > 0 && (
-                  <tr style={{ background:'var(--primary-ultra)', fontWeight:700 }}>
-                    <td colSpan={3} style={{ color:'var(--primary)', fontWeight:700 }}>TOTAL</td>
-                    <td className="amount-warn">{MAD(totaux.totalDu)}</td>
-                    <td style={{ color:'#3D9970', fontWeight:700 }}>{MAD(totaux.encaisse)}</td>
-                    <td style={{ color:'#E8A020', fontWeight:700 }}>{MAD(totaux.vnv)}</td>
-                    <td className="amount-neg">{MAD(totaux.nonPaye)}</td>
-                    <td>
-                      <span style={{ fontWeight:700, color: totaux.totalDu>0 && Math.round(totaux.encaisse/totaux.totalDu*100)>=70?'#3D9970':'#C0392B' }}>
-                        {totaux.totalDu>0?Math.round(totaux.encaisse/totaux.totalDu*100):0}%
-                      </span>
-                    </td>
-                    <td></td>
-                  </tr>
-                )}
-
-                {situationEncaissement.length === 0 && (
-                  <tr><td colSpan={9} style={{ textAlign:'center', padding:30, color:'var(--text-soft)' }}>Aucune donnée sur cette période</td></tr>
-                )}
-              </tbody>
-            </table>
+              )}
+            />
           </div>
         </div>
       )}
@@ -594,40 +566,27 @@ export default function Analyses({ showToast }) {
       {tab === 'produits' && (
         <div className="card-agro">
           <div className="card-header-agro">
-            <span className="card-title-agro">Top Produits Vendus</span>
+            <span className="card-title-agro">Produits Vendus</span>
           </div>
-          <div className="table-responsive">
-            <table className="table-agro">
-              <thead>
-                <tr><th>#</th><th>Produit</th><th>Catégorie</th><th>Qté Vendue</th><th>CA Généré</th><th>% du CA</th></tr>
-              </thead>
-              <tbody>
-                {ventesParProduit.map((p, i) => {
-                  const totalCAProduits = ventesParProduit.reduce((s,x) => s+x.ca, 0)
-                  const pct = totalCAProduits > 0 ? Math.round(p.ca/totalCAProduits*100) : 0
-                  return (
-                    <tr key={p.nom}>
-                      <td style={{ color:'var(--text-soft)', fontWeight:700 }}>#{i+1}</td>
-                      <td><strong>{p.nom}</strong></td>
-                      <td><span className="badge-zone">{p.categorie}</span></td>
-                      <td style={{ fontWeight:600 }}>{p.qte}</td>
-                      <td className="amount-pos">{MAD(p.ca)}</td>
-                      <td>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <div style={{ width:70, height:5, background:'var(--border)', borderRadius:3 }}>
-                            <div style={{ width:`${pct}%`, height:'100%', background:'var(--primary)', borderRadius:3 }}></div>
-                          </div>
-                          <span style={{ fontSize:11, color:'var(--text-soft)' }}>{pct}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-                {ventesParProduit.length === 0 && (
-                  <tr><td colSpan={6} style={{ textAlign:'center', padding:30, color:'var(--text-soft)' }}>Aucune vente sur cette période</td></tr>
-                )}
-              </tbody>
-            </table>
+          <div style={{ padding:'0 4px 4px' }}>
+            <SortableTable
+              data={ventesParProduit.map(p => ({ ...p, pct: totalCAProduits>0 ? Math.round(p.ca/totalCAProduits*100) : 0 }))}
+              emptyMsg="Aucune vente sur cette période"
+              columns={[
+                { key:'nom',       label:'Produit',    render: r => <strong>{r.nom}</strong> },
+                { key:'categorie', label:'Catégorie',  render: r => <span className="badge-zone">{r.categorie}</span> },
+                { key:'qte',       label:'Qté Vendue', render: r => <span style={{ fontWeight:600 }}>{r.qte}</span> },
+                { key:'ca',        label:'CA Généré',  render: r => <span className="amount-pos">{MAD(r.ca)}</span> },
+                { key:'pct',       label:'% du CA',    render: r => (
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <div style={{ width:70, height:5, background:'var(--border)', borderRadius:3 }}>
+                      <div style={{ width:`${r.pct}%`, height:'100%', background:'var(--primary)', borderRadius:3 }}></div>
+                    </div>
+                    <span style={{ fontSize:11, color:'var(--text-soft)' }}>{r.pct}%</span>
+                  </div>
+                )},
+              ]}
+            />
           </div>
         </div>
       )}

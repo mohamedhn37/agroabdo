@@ -265,43 +265,38 @@ export default function Recouvrement({ showToast }) {
                 <i className="bi bi-plus-lg"></i> Enregistrer Paiement
               </button>
             </div>
-            <div className="table-responsive">
-              <table className="table-agro">
-                <thead>
-                  <tr><th>Client</th><th>Zone</th><th>Total Dû</th><th style={{color:'#3D9970'}}>Encaissé</th><th style={{color:'#E8A020'}}>VNV</th><th style={{color:'#C0392B'}}>Non Payé</th><th>Retard</th><th>Action</th></tr>
-                </thead>
-                <tbody>
-                  {rows.map(r => (
-                    <tr key={r.id}
-                      onClick={()=>setSelectedClient(s=>s===r.id?null:r.id)}
-                      style={{ cursor:'pointer', background:selectedClient===r.id?'var(--primary-ultra)':'transparent',
-                        borderLeft:selectedClient===r.id?'3px solid var(--primary)':'3px solid transparent', transition:'all 0.15s' }}>
-                      <td><strong>{r.nom}</strong></td>
-                      <td><span className="badge-zone">{r.zone}</span></td>
-                      <td className="amount-warn">{MAD(r.totalDu)}</td>
-                      <td><span style={{color:'#3D9970',fontWeight:600}}>{MAD(r.encaisse)}</span></td>
-                      <td>
-                        {r.vnv>0
-                          ? <span style={{background:'rgba(232,160,32,0.12)',color:'#E8A020',fontWeight:700,padding:'2px 8px',borderRadius:5,fontSize:11.5}}>{MAD(r.vnv)}</span>
-                          : <span style={{color:'var(--text-soft)'}}>—</span>}
-                      </td>
-                      <td>
-                        {r.nonPaye>0 ? <span className="badge-retard">{MAD(r.nonPaye)}</span> : <span className="badge-ok">Soldé</span>}
-                      </td>
-                      <td>
-                        {r.nonPaye>0||r.vnv>0 ? <span className="badge-retard">{r.retard}j</span> : <span className="badge-ok">✓</span>}
-                      </td>
-                      <td onClick={e=>e.stopPropagation()}>
-                        {(r.nonPaye>0||r.vnv>0) && (
-                          <button className="btn-icon" onClick={()=>openModal(r.id)}>
-                            <i className="bi bi-cash-coin"></i> Paiement
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ padding:'0 0 4px' }}>
+              <SortableTable
+                data={rows}
+                pageSize={20}
+                emptyMsg="Aucun client"
+                onRowClick={r => setSelectedClient(s => s===r.id ? null : r.id)}
+                rowStyle={r => ({
+                  background:  selectedClient===r.id ? 'var(--primary-ultra)' : undefined,
+                  borderLeft:  selectedClient===r.id ? '3px solid var(--primary)' : '3px solid transparent',
+                  transition:  'all 0.15s',
+                })}
+                columns={[
+                  { key:'nom',     label:'Client',   render: r => <strong>{r.nom}</strong> },
+                  { key:'zone',    label:'Zone',     render: r => <span className="badge-zone">{r.zone}</span> },
+                  { key:'totalDu', label:'Total Dû', render: r => <span className="amount-warn">{MAD(r.totalDu)}</span> },
+                  { key:'encaisse',label:'Encaissé', render: r => <span style={{color:'#3D9970',fontWeight:600}}>{MAD(r.encaisse)}</span> },
+                  { key:'vnv',     label:'VNV',      render: r => r.vnv>0
+                    ? <span style={{background:'rgba(232,160,32,0.12)',color:'#E8A020',fontWeight:700,padding:'2px 8px',borderRadius:5,fontSize:11.5}}>{MAD(r.vnv)}</span>
+                    : <span style={{color:'var(--text-soft)'}}>—</span> },
+                  { key:'nonPaye', label:'Non Payé', render: r => r.nonPaye>0 ? <span className="badge-retard">{MAD(r.nonPaye)}</span> : <span className="badge-ok">Soldé</span> },
+                  { key:'retard',  label:'Retard',   render: r => r.nonPaye>0||r.vnv>0 ? <span className="badge-retard">{r.retard}j</span> : <span className="badge-ok">✓</span> },
+                  { key:'action',  label:'',         sortable:false, render: r => (
+                    <div onClick={e => e.stopPropagation()}>
+                      {(r.nonPaye>0||r.vnv>0) && (
+                        <button className="btn-icon" onClick={()=>openModal(r.id)}>
+                          <i className="bi bi-cash-coin"></i> Paiement
+                        </button>
+                      )}
+                    </div>
+                  )},
+                ]}
+              />
             </div>
           </div>
         </div>

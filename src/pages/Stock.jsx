@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAll, addItemWithNumero, updateItem, COLS, MAD, fmtDate } from '../firebase'
+import SortableTable from '../components/SortableTable'
 
 const CAT_COLORS = { Engrais:'#7B0D1E', Semences:'#3D9970', Phytosanitaires:'#E8C547', Machinerie:'#6B7280' }
 const EMPTY_ARR = { produitId:'', date: new Date().toISOString().split('T')[0], qte:'', prixAchat:'', fournisseur:'' }
@@ -100,39 +101,35 @@ export default function Stock({ showToast }) {
             </div>
           </div>
           <div className="card-agro">
-            <div className="table-responsive">
-              <table className="table-agro">
-                <thead><tr><th>Produit</th><th>Catégorie</th><th>Stock</th><th>Min</th><th>Prix Base</th><th>Valeur</th><th>Statut</th><th>Ajuster</th></tr></thead>
-                <tbody>
-                  {filtered.map(p => {
-                    const alerte = p.stock <= p.stockMin
-                    const pct = Math.min(100, Math.round(p.stock / Math.max(p.stockMin*3,1)*100))
-                    const col = CAT_COLORS[p.categorie] || '#6B7280'
-                    return (
-                      <tr key={p.id}>
-                        <td><strong>{p.nom}</strong><div style={{ fontSize:11, color:'var(--text-soft)' }}>{p.unite}</div></td>
-                        <td><span style={{ background:`${col}18`, color:col, fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:4 }}>{p.categorie}</span></td>
-                        <td>
-                          <strong style={{ color: alerte ? 'var(--accent-danger)' : 'var(--text-main)' }}>{p.stock}</strong>
-                          <div style={{ width:70, height:4, background:'var(--border)', borderRadius:2, marginTop:4 }}>
-                            <div style={{ width:`${pct}%`, height:'100%', background: alerte ? 'var(--accent-danger)' : 'var(--primary)', borderRadius:2 }}></div>
-                          </div>
-                        </td>
-                        <td style={{ color:'var(--text-soft)' }}>{p.stockMin}</td>
-                        <td>{(p.prixBase||0).toLocaleString('fr-MA')} MAD</td>
-                        <td className={p.stock > 0 ? 'amount-pos' : 'amount-neg'}>{MAD(p.stock * p.prixBase)}</td>
-                        <td>{alerte ? <span className="badge-retard">⚠ Critique</span> : <span className="badge-ok">✓ OK</span>}</td>
-                        <td>
-                          <button className="btn-icon" onClick={() => { setAjustProd(p); setAjustVal(p.stock); setModalAjust(true) }}>
-                            <i className="bi bi-sliders"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <SortableTable
+              data={filtered.map(p => ({ ...p, valeur: p.stock * (p.prixBase||0), alertSort: p.stock <= p.stockMin ? 0 : 1 }))}
+              emptyMsg="Aucun produit trouvé"
+              columns={[
+                { key:'nom',       label:'Produit',   render: r => <><strong>{r.nom}</strong><div style={{ fontSize:11, color:'var(--text-soft)' }}>{r.unite}</div></> },
+                { key:'categorie', label:'Catégorie', render: r => {
+                  const col = CAT_COLORS[r.categorie] || '#6B7280'
+                  return <span style={{ background:`${col}18`, color:col, fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:4 }}>{r.categorie}</span>
+                }},
+                { key:'stock',     label:'Stock',     render: r => {
+                  const pct = Math.min(100, Math.round(r.stock / Math.max((r.stockMin||1)*3, 1)*100))
+                  return <>
+                    <strong style={{ color: r.stock <= r.stockMin ? 'var(--accent-danger)' : 'var(--text-main)' }}>{r.stock}</strong>
+                    <div style={{ width:70, height:4, background:'var(--border)', borderRadius:2, marginTop:4 }}>
+                      <div style={{ width:`${pct}%`, height:'100%', background: r.stock <= r.stockMin ? 'var(--accent-danger)' : 'var(--primary)', borderRadius:2 }}></div>
+                    </div>
+                  </>
+                }},
+                { key:'stockMin',  label:'Min',       render: r => <span style={{ color:'var(--text-soft)' }}>{r.stockMin}</span> },
+                { key:'prixBase',  label:'Prix Base', render: r => <>{(r.prixBase||0).toLocaleString('fr-MA')} MAD</> },
+                { key:'valeur',    label:'Valeur',    render: r => <span className={r.stock > 0 ? 'amount-pos' : 'amount-neg'}>{MAD(r.valeur)}</span> },
+                { key:'alertSort', label:'Statut',    render: r => r.stock <= r.stockMin ? <span className="badge-retard">⚠ Critique</span> : <span className="badge-ok">✓ OK</span> },
+                { key:'ajuster',   label:'Ajuster',   sortable:false, render: r => (
+                  <button className="btn-icon" onClick={() => { setAjustProd(r); setAjustVal(r.stock); setModalAjust(true) }}>
+                    <i className="bi bi-sliders"></i>
+                  </button>
+                )},
+              ]}
+            />
           </div>
         </>
       )}
@@ -147,26 +144,21 @@ export default function Stock({ showToast }) {
             </button>
           </div>
           <div className="card-agro">
-            <div className="table-responsive">
-              <table className="table-agro">
-                <thead><tr><th>Date</th><th>Produit</th><th>Qté Reçue</th><th>Prix Achat/u</th><th>Valeur</th><th>Fournisseur</th></tr></thead>
-                <tbody>
-                  {[...arrivages].sort((a,b) => new Date(b.date)-new Date(a.date)).map(a => {
-                    const prod = produits.find(p => p.id === a.produitId)
-                    return (
-                      <tr key={a.id}>
-                        <td>{fmtDate(a.date)}</td>
-                        <td><strong>{prod ? prod.nom : '?'}</strong></td>
-                        <td className="amount-pos">+{a.qte}</td>
-                        <td>{a.prixAchat ? a.prixAchat.toLocaleString('fr-MA')+' MAD' : '—'}</td>
-                        <td className="amount-warn">{a.prixAchat ? MAD(a.qte * a.prixAchat) : '—'}</td>
-                        <td style={{ color:'var(--text-soft)' }}>{a.fournisseur||'—'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <SortableTable
+              data={arrivages.map(a => {
+                const prod = produits.find(p => p.id === a.produitId)
+                return { ...a, produitNom: prod ? prod.nom : '?', valeurArr: (a.qte||0) * (a.prixAchat||0) }
+              })}
+              emptyMsg="Aucun arrivage enregistré"
+              columns={[
+                { key:'date',       label:'Date',         render: r => fmtDate(r.date) },
+                { key:'produitNom', label:'Produit',      render: r => <strong>{r.produitNom}</strong> },
+                { key:'qte',        label:'Qté Reçue',    render: r => <span className="amount-pos">+{r.qte}</span> },
+                { key:'prixAchat',  label:'Prix Achat/u', render: r => r.prixAchat ? r.prixAchat.toLocaleString('fr-MA')+' MAD' : '—' },
+                { key:'valeurArr',  label:'Valeur',       render: r => r.prixAchat ? <span className="amount-warn">{MAD(r.valeurArr)}</span> : '—' },
+                { key:'fournisseur',label:'Fournisseur',  render: r => <span style={{ color:'var(--text-soft)' }}>{r.fournisseur||'—'}</span> },
+              ]}
+            />
           </div>
         </>
       )}
